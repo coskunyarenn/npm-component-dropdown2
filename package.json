@@ -1,0 +1,18 @@
+{
+  "name": "dropdown2",
+  "version": "1.0.0",
+  "main": "index.tsx",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-native": "^0.72.8"
+  },
+  "dependencies": {
+    "react-native-svg": "^15.14.0"
+  }
+}
