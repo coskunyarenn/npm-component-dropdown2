@@ -20,10 +20,11 @@ type Props = {
   label?: string;
   placeholder?: string;
   options: DropDownOption[];
-  onSelect?: (val: string) => void;
+  onSelect?: (val: string | string[]) => void;
   header?: string;
   circleSelected?: boolean;
   tickSelected?: boolean;
+  isMultiple?: boolean;
 };
 
 const Dropdown2: React.FC<Props> = ({
@@ -31,27 +32,52 @@ const Dropdown2: React.FC<Props> = ({
   placeholder,
   options,
   onSelect,
+  isMultiple,
   header,
   circleSelected = false,
   tickSelected = false,
 }) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
 
   const screenWidth = Dimensions.get("window").width;
 
-  const handleSelect = (val: string) => {
-    setSelected(val);
-    onSelect?.(val);
-    setOpen(false);
+  const handleSelect = (value: string) => {
+    if (isMultiple) {
+      let newSelected: string[] = [];
+      if (selectedValues.includes(value)) {
+        // zaten seçiliyse kaldır
+        newSelected = selectedValues.filter((v) => v !== value);
+      } else {
+        // seçili değilse ekle
+        newSelected = [...selectedValues, value];
+      }
+      setSelectedValues(newSelected);
+      onSelect && onSelect(newSelected); // array olarak döner
+    } else {
+      setSelected(value);
+      onSelect && onSelect(value); // string olarak döner
+      setOpen(false); // tek seçimde modal kapanır
+    }
   };
+
+  const displayValue = isMultiple
+    ? selectedValues.length > 0
+      ? selectedValues.join(", ")
+      : placeholder
+    : selected || placeholder;
+
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
 
       <Pressable style={styles.trigger} onPress={() => setOpen(true)}>
-        <Text style={[styles.triggerText, !selected && styles.placeholderText]}>
-          {selected || placeholder}
+        <Text
+          style={[styles.triggerText, !selected && styles.placeholderText]}
+          numberOfLines={1}
+        >
+          {displayValue}
         </Text>
         <Text style={styles.chevron}>▾</Text>
       </Pressable>
@@ -79,7 +105,9 @@ const Dropdown2: React.FC<Props> = ({
               data={options ?? []}
               keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => {
-                const active = item.label === selected;
+                const active = isMultiple
+                  ? selectedValues.includes(item.label)
+                  : item.label === selected;
                 return (
                   <Pressable
                     onPress={() => handleSelect(item.label)}
@@ -139,7 +167,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#DADCE0",
+    borderColor: "#DADCE0", //
     paddingHorizontal: 14,
     alignItems: "center",
     flexDirection: "row",
