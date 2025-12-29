@@ -96,7 +96,7 @@ const Dropdown2: React.FC<Props> = ({
           >
             {header && (
               <View style={styles.headerContainer}>
-                <Text style={styles.headerContainerText}> Kategori Sec</Text>
+                <Text style={styles.headerContainerText}> {header}</Text>
               </View>
             )}
 
