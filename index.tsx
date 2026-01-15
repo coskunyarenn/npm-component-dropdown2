@@ -7,6 +7,8 @@ import {
   FlatList,
   StyleSheet,
   Dimensions,
+  ViewStyle,
+  TextStyle,
 } from "react-native";
 import SelectedCircle from "./assets/selectedCircle.svg";
 import Circle from "./assets/circle.svg";
@@ -23,8 +25,12 @@ type Props = {
   onSelect?: (val: string | string[]) => void;
   header?: string;
   circleSelected?: boolean;
+  isConstantPlaceHolder?:boolean;
   tickSelected?: boolean;
   isMultiple?: boolean;
+  showButton?:boolean;
+  buttonStyle?:ViewStyle;
+  textStyle?:TextStyle;
 };
 
 const Dropdown2: React.FC<Props> = ({
@@ -33,9 +39,13 @@ const Dropdown2: React.FC<Props> = ({
   options,
   onSelect,
   isMultiple,
+   showButton=false,
   header,
+  isConstantPlaceHolder=false,
   circleSelected = false,
   tickSelected = false,
+  buttonStyle,
+  textStyle
 }) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
@@ -72,12 +82,12 @@ const Dropdown2: React.FC<Props> = ({
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
 
-      <Pressable style={styles.trigger} onPress={() => setOpen(true)}>
+      <Pressable style={[styles.trigger, buttonStyle]}  onPress={() => setOpen(true)}>
         <Text
-          style={[styles.triggerText, !selected && styles.placeholderText]}
+          style={[styles.triggerText, !selected && styles.placeholderText ,textStyle]}
           numberOfLines={1}
         >
-          {displayValue}
+          {isConstantPlaceHolder? placeholder :displayValue}
         </Text>
         <Text style={styles.chevron}>▾</Text>
       </Pressable>
@@ -151,6 +161,11 @@ const Dropdown2: React.FC<Props> = ({
               ItemSeparatorComponent={() => <View style={styles.separator} />}
               contentContainerStyle={styles.listContent}
             />
+            {showButton &&(
+<Pressable style={styles.buttonContainer} onPress={()=>setOpen(false)}>
+<Text>Kapat</Text>
+</Pressable>
+            )}
           </View>
         </View>
       </Modal>
@@ -262,4 +277,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#000",
   },
+  buttonContainer:{
+    borderWidth:1,
+   borderColor: "#666", 
+   padding:10,
+   margin:10,
+   borderRadius:12,
+   alignItems:"center",
+   backgroundColor:"#f0f0f0"
+  }
 });
