@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useState,useEffect} from "react"
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
 } from "react-native"
 import SelectedCircle from "./assets/selectedCircle.svg"
 import Circle from "./assets/circle.svg"
+
+const screenWidth = Dimensions.get("window").width
 
 export type DropDownOption = {
   label: string
@@ -55,10 +57,27 @@ const Dropdown2: React.FC<Props> = ({
     string[]
   >([])
 
-  const screenWidth = Dimensions.get("window").width
+    useEffect(() => {
+  if (isMultiple) {
+    if (Array.isArray(selected)) {
+      setInternalSelectedValues(selected);
+    } else if (!selected) {
+      setInternalSelectedValues([]);
+    }
+  } else {
+    if (typeof selected === 'string') {
+      setInternalSelected(selected);
+    } else {
+      setInternalSelected(null);
+    }
+  }
+}, [selected]);
+
+
   const currentSelected = isMultiple
     ? ((selected as string[]) ?? internalSelectedValues)
     : ((selected as string) ?? internalSelected)
+
 
   const handleSelect = (value: string) => {
     if (isMultiple) {
@@ -104,7 +123,7 @@ const Dropdown2: React.FC<Props> = ({
         <Text
           style={[
             styles.triggerText,
-            !selected && styles.placeholderText,
+            !currentSelected && styles.placeholderText,
             textStyle,
           ]}
           numberOfLines={1}
