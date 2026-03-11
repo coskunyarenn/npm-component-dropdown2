@@ -1,4 +1,4 @@
-import React, {useState,useEffect} from "react"
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,32 +9,31 @@ import {
   Dimensions,
   ViewStyle,
   TextStyle,
-} from "react-native"
-import SelectedCircle from "./assets/selectedCircle.svg"
-import Circle from "./assets/circle.svg"
-
-const screenWidth = Dimensions.get("window").width
+} from "react-native";
+import SelectedCircle from "./assets/selectedCircle.svg";
+import Circle from "./assets/circle.svg";
 
 export type DropDownOption = {
-  label: string
-  badge?: string
-}
+  label: string;
+  badge?: string;
+};
 
 type Props = {
-  label?: string
-  placeholder?: string
-  options: DropDownOption[]
-  onSelect?: (val: string | string[]) => void
-  header?: string
-  circleSelected?: boolean
-  isConstantPlaceHolder?: boolean
-  tickSelected?: boolean
-  isMultiple?: boolean
-  showButton?: boolean
-  buttonStyle?: ViewStyle
-  textStyle?: TextStyle
-  selected?: string | string[]
-}
+  label?: string;
+  placeholder?: string;
+  options: DropDownOption[];
+  onSelect?: (val: string | string[]) => void;
+  header?: string;
+  circleSelected?: boolean;
+  isConstantPlaceHolder?: boolean;
+  tickSelected?: boolean;
+  isMultiple?: boolean;
+  showButton?: boolean;
+  buttonStyle?: ViewStyle;
+  textStyle?: TextStyle;
+  selected?: string;
+  disabled?: boolean;
+};
 
 const Dropdown2: React.FC<Props> = ({
   label,
@@ -49,68 +48,44 @@ const Dropdown2: React.FC<Props> = ({
   tickSelected = false,
   buttonStyle,
   textStyle,
-  selected,
+  selected: selectedProp,
+  disabled,
 }) => {
-  const [open, setOpen] = useState(false)
-  const [internalSelected, setInternalSelected] = useState<string | null>(null)
-  const [internalSelectedValues, setInternalSelectedValues] = useState<
-    string[]
-  >([])
+  const [open, setOpen] = useState(false);
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
 
-    useEffect(() => {
-  if (isMultiple) {
-    if (Array.isArray(selected)) {
-      setInternalSelectedValues(selected);
-    } else if (!selected) {
-      setInternalSelectedValues([]);
+  const screenWidth = Dimensions.get("window").width;
+  const [selected, setSelected] = useState<string | null>(selectedProp || null);
+
+  useEffect(() => {
+    if (selectedProp) {
+      setSelected(selectedProp);
     }
-  } else {
-    if (typeof selected === 'string') {
-      setInternalSelected(selected);
-    } else {
-      setInternalSelected(null);
-    }
-  }
-}, [selected]);
-
-
-  const currentSelected = isMultiple
-    ? ((selected as string[]) ?? internalSelectedValues)
-    : ((selected as string) ?? internalSelected)
-
-
+  }, [selectedProp]);
   const handleSelect = (value: string) => {
     if (isMultiple) {
-      const current = (selected as string[]) ?? internalSelectedValues
-
-      let newSelected: string[] = []
-
-      if (current.includes(value)) {
-        newSelected = current.filter((v) => v !== value)
+      let newSelected: string[] = [];
+      if (selectedValues.includes(value)) {
+        // zaten seçiliyse kaldır
+        newSelected = selectedValues.filter((v) => v !== value);
       } else {
-        newSelected = [...current, value]
+        // seçili değilse ekle
+        newSelected = [...selectedValues, value];
       }
-
-      if (!selected) {
-        setInternalSelectedValues(newSelected)
-      }
-
-      onSelect?.(newSelected)
+      setSelectedValues(newSelected);
+      onSelect && onSelect(newSelected); // array olarak döner
     } else {
-      if (!selected) {
-        setInternalSelected(value)
-      }
-
-      onSelect?.(value)
-      setOpen(false)
+      setSelected(value);
+      onSelect && onSelect(value); // string olarak döner
+      setOpen(false); // tek seçimde modal kapanır
     }
-  }
+  };
 
   const displayValue = isMultiple
-    ? currentSelected && currentSelected.length > 0
-      ? (currentSelected as string[]).join(", ")
+    ? selectedValues.length > 0
+      ? selectedValues.join(", ")
       : placeholder
-    : currentSelected || placeholder
+    : selected || placeholder;
 
   return (
     <View style={styles.container}>
@@ -118,12 +93,12 @@ const Dropdown2: React.FC<Props> = ({
 
       <Pressable
         style={[styles.trigger, buttonStyle]}
-        onPress={() => setOpen(true)}
+        onPress={() => !disabled && setOpen(true)}
       >
         <Text
           style={[
             styles.triggerText,
-            !currentSelected && styles.placeholderText,
+            !selected && styles.placeholderText,
             textStyle,
           ]}
           numberOfLines={1}
@@ -143,7 +118,7 @@ const Dropdown2: React.FC<Props> = ({
 
         <View style={styles.centeredContainer}>
           <View
-            style={[styles.sheet, {width: Math.min(300, screenWidth - 40)}]}
+            style={[styles.sheet, { width: Math.min(300, screenWidth - 40) }]}
           >
             {header && (
               <View style={styles.headerContainer}>
@@ -155,15 +130,14 @@ const Dropdown2: React.FC<Props> = ({
             <FlatList
               data={options ?? []}
               keyExtractor={(item, index) => index.toString()}
-              renderItem={({item}) => {
+              renderItem={({ item }) => {
                 const active = isMultiple
-                  ? (currentSelected as string[])?.includes(item.label)
-                  : item.label === currentSelected
-
+                  ? selectedValues.includes(item.label)
+                  : item.label === selected;
                 return (
                   <Pressable
                     onPress={() => handleSelect(item.label)}
-                    style={({pressed}) => [
+                    style={({ pressed }) => [
                       styles.option,
                       pressed && styles.optionPressed,
                     ]}
@@ -198,7 +172,7 @@ const Dropdown2: React.FC<Props> = ({
                       )}
                     </View>
                   </Pressable>
-                )
+                );
               }}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
               contentContainerStyle={styles.listContent}
@@ -215,14 +189,14 @@ const Dropdown2: React.FC<Props> = ({
         </View>
       </Modal>
     </View>
-  )
-}
+  );
+};
 
-export default Dropdown2
+export default Dropdown2;
 
 const styles = StyleSheet.create({
-  container: {width: "auto"},
-  label: {fontSize: 14, color: "#333", marginBottom: 6},
+  container: { width: "auto" },
+  label: { fontSize: 14, color: "#333", marginBottom: 6 },
   trigger: {
     minHeight: 48,
     borderRadius: 12,
@@ -234,10 +208,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     backgroundColor: "#fff",
   },
-  triggerText: {flex: 1, fontSize: 16, color: "#111"},
-  placeholderText: {color: "#8E8E93"},
-  chevron: {fontSize: 18, marginLeft: 8},
-  backdrop: {flex: 1, backgroundColor: "#00000066"},
+  triggerText: { flex: 1, fontSize: 16, color: "#111" },
+  placeholderText: { color: "#8E8E93" },
+  chevron: { fontSize: 18, marginLeft: 8 },
+  backdrop: { flex: 1, backgroundColor: "#00000066" },
   centeredContainer: {
     position: "absolute",
     top: 0,
@@ -255,7 +229,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.2,
     shadowRadius: 12,
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     elevation: 6,
   },
   sheetTitle: {
@@ -282,10 +256,10 @@ const styles = StyleSheet.create({
     width: "80%",
     textAlign: "center",
   },
-  listContent: {paddingVertical: 6},
+  listContent: { paddingVertical: 6 },
 
-  optionLabel: {fontSize: 16, color: "#111"},
-  optionLabelActive: {fontWeight: "600"},
+  optionLabel: { fontSize: 16, color: "#111" },
+  optionLabelActive: { fontWeight: "600" },
   separator: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: "#EEE",
@@ -298,7 +272,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  optionPressed: {backgroundColor: "#F7F7F7"},
+  optionPressed: { backgroundColor: "#F7F7F7" },
   optionContent: {
     flexDirection: "row",
     alignItems: "center",
@@ -331,4 +305,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f0f0f0",
   },
-})
+});
